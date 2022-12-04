@@ -2,26 +2,30 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebAuthorization.Data;
 using WebAuthorization.Data.Identity;
+using WebAuthorization.Models;
 
 namespace WebAuthorization.Pages.Students
 {
     public class EditModel : PageModel
     {
         private readonly WebAuthorization.Data.ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public EditModel(WebAuthorization.Data.ApplicationDbContext context)
+        public EditModel(WebAuthorization.Data.ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         [BindProperty]
-        public Student Student { get; set; } = default!;
+        public StudentModel Student { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -31,11 +35,12 @@ namespace WebAuthorization.Pages.Students
             }
 
             var student =  await _context.Students.FirstOrDefaultAsync(m => m.Id == id);
+            Student = _mapper.Map<Student, StudentModel>(student);
+
             if (student == null)
             {
                 return NotFound();
             }
-            Student = student;
             return Page();
         }
 
@@ -48,7 +53,15 @@ namespace WebAuthorization.Pages.Students
                 return Page();
             }
 
-            _context.Attach(Student).State = EntityState.Modified;
+            if (Student.Deleted)
+            {
+                ModelState.AddModelError("Student.Deleted", "Could not be deleted");
+                ModelState.AddModelError("", "Could not be deleted");
+                return Page();
+            }
+
+            var student = _mapper.Map<Student>(Student);
+            _context.Attach(student).State = EntityState.Modified;
 
             try
             {

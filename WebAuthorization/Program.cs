@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGeneration.Design;
 using WebAuthorization.Data;
 using WebAuthorization.Data.Identity;
 using WebAuthorization.Services.Email;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +20,13 @@ builder.Services.AddDefaultIdentity<ApplicationIdentityUser>(options => options.
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddRazorPages();
+
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+builder.Services.AddFluentValidation(ce =>
+{
+    ce.RegisterValidatorsFromAssembly(typeof(Program).Assembly);
+});
 
 var app = builder.Build();
 
